@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from free_imagegen.cli import main  # noqa: E402
+from free_imagegen.cli import main
 
 
 class CliTests(unittest.TestCase):
@@ -33,10 +33,14 @@ class CliTests(unittest.TestCase):
                 )
             self.assertEqual(code, 0)
             self.assertTrue(output.exists())
-            self.assertEqual(json.loads(stdout.getvalue())["svg"], str(output.resolve()))
+            self.assertEqual(
+                json.loads(stdout.getvalue())["svg"], str(output.resolve())
+            )
 
     def test_validate_plan_command(self) -> None:
-        template = ROOT / "src" / "free_imagegen" / "resources" / "story-plan.template.json"
+        template = (
+            ROOT / "src" / "free_imagegen" / "resources" / "story-plan.template.json"
+        )
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = main(["validate-plan", str(template)])

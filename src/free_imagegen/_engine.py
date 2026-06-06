@@ -3534,21 +3534,52 @@ def _append_render_controls(
 def export_svg_to_png(svg_path: Path, png_path: Path, width: int, height: int) -> None:
     png_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def run(cmd: list[str]) -> bool:
+    # On Windows, native renderers (rsvg-convert, inkscape, ImageMagick) are built
+    # against the system code page and silently mangle non-mappable characters in
+    # the *output* path to '?' — for example, a Chinese-named PNG in CP936 envs.
+    # Workaround: render to a guaranteed-ASCII temp file, then copy back.
+    def _render_to_temp(build_cmd) -> Path | None:
         try:
-            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return png_path.exists() and png_path.stat().st_size > 0
+            with tempfile.NamedTemporaryFile(prefix="free-imagegen-", suffix=".png", delete=False) as tmp:
+                tmp_path = Path(tmp.name)
         except Exception:
-            return False
+            return None
+        try:
+            cmd = build_cmd(tmp_path)
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if tmp_path.exists() and tmp_path.stat().st_size > 0:
+                return tmp_path
+        except Exception:
+            pass
+        finally:
+            if not (tmp_path.exists() and tmp_path.stat().st_size > 0):
+                tmp_path.unlink(missing_ok=True)
+        return None
+
+    def _publish(tmp: Path) -> None:
+        shutil.copyfile(tmp, png_path)
+        tmp.unlink(missing_ok=True)
 
     if shutil.which("rsvg-convert"):
-        if run(["rsvg-convert", "-w", str(width), "-h", str(height), str(svg_path), "-o", str(png_path)]):
+        tmp = _render_to_temp(
+            lambda out: ["rsvg-convert", "-w", str(width), "-h", str(height), str(svg_path), "-o", str(out)]
+        )
+        if tmp is not None:
+            _publish(tmp)
             return
     if shutil.which("inkscape"):
-        if run(["inkscape", str(svg_path), f"--export-filename={png_path}", f"--export-width={width}", f"--export-height={height}"]):
+        tmp = _render_to_temp(
+            lambda out: ["inkscape", str(svg_path), f"--export-filename={out}", f"--export-width={width}", f"--export-height={height}"]
+        )
+        if tmp is not None:
+            _publish(tmp)
             return
     if shutil.which("sips"):
-        if run(["sips", "-s", "format", "png", str(svg_path), "--out", str(png_path)]):
+        tmp = _render_to_temp(
+            lambda out: ["sips", "-s", "format", "png", str(svg_path), "--out", str(out)]
+        )
+        if tmp is not None:
+            _publish(tmp)
             return
 
     if shutil.which("qlmanage"):
@@ -3578,7 +3609,11 @@ def export_svg_to_png(svg_path: Path, png_path: Path, width: int, height: int) -
             except Exception:
                 pass
     if shutil.which("magick"):
-        if run(["magick", "-background", "none", str(svg_path), str(png_path)]):
+        tmp = _render_to_temp(
+            lambda out: ["magick", "-background", "none", str(svg_path), str(out)]
+        )
+        if tmp is not None:
+            _publish(tmp)
             return
 
     raise RuntimeError("No local SVG renderer found. Install rsvg-convert, inkscape, ImageMagick, or ensure macOS sips supports SVG.")

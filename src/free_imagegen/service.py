@@ -5,7 +5,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from .api import generate_image, generate_openclaw_assets, generate_story, validate_story_plan
+from .api import (
+    generate_image,
+    generate_openclaw_assets,
+    generate_story,
+    validate_story_plan,
+)
 
 MAX_BODY_BYTES = 2 * 1024 * 1024
 
@@ -93,7 +98,9 @@ class Handler(BaseHTTPRequestHandler):
             project = str(payload.get("project", "")).strip()
             if not prompt or not project:
                 raise ValueError("fields 'prompt' and 'project' are required")
-            return generate_openclaw_assets(project, prompt, keep_svg=bool(payload.get("keep_svg", False)))
+            return generate_openclaw_assets(
+                project, prompt, keep_svg=bool(payload.get("keep_svg", False))
+            )
 
         if self.path == "/validate-plan":
             plan = validate_story_plan(payload.get("plan"))

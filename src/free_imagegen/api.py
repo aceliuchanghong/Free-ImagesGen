@@ -77,7 +77,9 @@ def write_svg(
 ) -> dict[str, Any]:
     output_path = Path(output).expanduser().resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(compose_svg(prompt, width, height, options=options), encoding="utf-8")
+    output_path.write_text(
+        compose_svg(prompt, width, height, options=options), encoding="utf-8"
+    )
     return {
         "mode": "local-prompt-to-svg",
         "prompt": prompt,
@@ -137,7 +139,9 @@ def load_story_plan(path: str | Path) -> dict[str, Any]:
     try:
         data = json.loads(plan_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise ValueError(f"invalid story plan JSON at line {exc.lineno}: {exc.msg}") from exc
+        raise ValueError(
+            f"invalid story plan JSON at line {exc.lineno}: {exc.msg}"
+        ) from exc
     return validate_story_plan(data)
 
 
@@ -165,7 +169,9 @@ def generate_story(
     if not prompt.strip():
         raise ValueError("prompt cannot be empty")
     _validate_dimensions(width, height)
-    normalized_plan = validate_story_plan(story_plan) if story_plan is not None else None
+    normalized_plan = (
+        validate_story_plan(story_plan) if story_plan is not None else None
+    )
     if strategy not in {"auto", "story", "dense", "visual"}:
         raise ValueError(f"unsupported story strategy: {strategy}")
     if mode not in {"all", "outline-only", "prompts-only", "images-only"}:
@@ -196,7 +202,9 @@ def generate_openclaw_assets(
         return _engine.generate_openclaw_assets(project_dir, prompt, keep_svg=keep_svg)
 
 
-def default_output_path(prompt: str, suffix: str = ".png", *, prefix: str = "image") -> Path:
+def default_output_path(
+    prompt: str, suffix: str = ".png", *, prefix: str = "image"
+) -> Path:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     slug = _engine._slugify(prompt)[:36] or prefix
     return Path.cwd() / "output" / f"{stamp}-{prefix}-{slug}{suffix}"

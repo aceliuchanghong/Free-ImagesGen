@@ -9,7 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from free_imagegen.api import compose_svg, load_story_plan, validate_story_plan  # noqa: E402
+from free_imagegen.api import (
+    compose_svg,
+    load_story_plan,
+    validate_story_plan,
+)
 
 
 class ApiTests(unittest.TestCase):

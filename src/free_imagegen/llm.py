@@ -13,7 +13,15 @@ from openai import OpenAI
 
 from .llm_prompts import STORY_PLAN_SYSTEM, STRUCTURED_PROMPT_SYSTEM
 
-_ENV_KEYS = ("BASE_URL", "MODEL", "API_KEY", "TEMPERATURE", "MAX_TOKENS", "TIMEOUT", "MAX_RETRIES")
+_ENV_KEYS = (
+    "BASE_URL",
+    "MODEL",
+    "API_KEY",
+    "TEMPERATURE",
+    "MAX_TOKENS",
+    "TIMEOUT",
+    "MAX_RETRIES",
+)
 
 
 def _find_env_file() -> Path | None:
@@ -71,11 +79,17 @@ def _get_llm_config() -> dict[str, Any]:
     api_key = env.get("API_KEY", "")
 
     if not base_url:
-        raise RuntimeError("BASE_URL not configured. Set it in .env or environment variable.")
+        raise RuntimeError(
+            "BASE_URL not configured. Set it in .env or environment variable."
+        )
     if not model:
-        raise RuntimeError("MODEL not configured. Set it in .env or environment variable.")
+        raise RuntimeError(
+            "MODEL not configured. Set it in .env or environment variable."
+        )
     if not api_key:
-        raise RuntimeError("API_KEY not configured. Set it in .env or environment variable.")
+        raise RuntimeError(
+            "API_KEY not configured. Set it in .env or environment variable."
+        )
 
     return {
         "base_url": base_url,

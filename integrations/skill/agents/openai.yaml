@@ -1,4 +1,0 @@
-interface:
-  display_name: "Free ImageGen"
-  short_description: "Generate local SVG and PNG content graphics"
-  default_prompt: "Use $free-imagegen and the installed free-imagegen CLI to create local image assets."
